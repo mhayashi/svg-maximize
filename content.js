@@ -6,7 +6,29 @@ document.addEventListener('click', function(event) {
     const container = target.parentElement;
     const isMermaid = container.classList.contains('mermaid');
     let state = container.getAttribute('data-state');
-    
+    let mouseX, mouseY;
+
+    function updateTransformOrigin(x, y) {
+      container.style.transformOrigin = `${x}px ${y}px`;
+    }
+
+    function resetTransformOrigin() {
+      container.style.transformOrigin = '';
+      container.style.transform = '';
+    }
+
+    function handleMouseMove(event) {
+      mouseX = event.clientX;
+      mouseY = event.clientY;
+      updateTransformOrigin(mouseX, mouseY);
+    }
+
+    function handleMouseOut() {
+      resetTransformOrigin();
+      container.removeEventListener('mousemove', handleMouseMove);
+      container.removeEventListener('mouseout', handleMouseOut);
+    }
+
     if (isMermaid) {
       if (!state) {
         // 初回クリック時の処理（最大化1）
@@ -23,19 +45,22 @@ document.addEventListener('click', function(event) {
         // 2回目のクリック時の処理（最大化2）
         state = 'maximized2';
         container.setAttribute('data-state', state);
-        
-        // マウスの位置を取得
-        const mouseX = event.clientX;
-        const mouseY = event.clientY;
-        
-        // 拡大表示する位置を調整
+
+        container.addEventListener('mousemove', handleMouseMove);
+
+        // 初回のtransformOriginを設定
+        mouseX = event.clientX;
+        mouseY = event.clientY;
+        updateTransformOrigin(mouseX, mouseY);
         container.style.transform = 'scale(2)';
-        container.style.transformOrigin = `${mouseX}px ${mouseY}px`;
       } else {
         // 3回目のクリック時の処理（元のサイズに戻す）
         state = '';
         container.removeAttribute('data-state');
         container.removeAttribute('style');
+        resetTransformOrigin();
+        container.removeEventListener('mousemove', handleMouseMove);
+        container.removeEventListener('mouseout', handleMouseOut);
       }
     }
   }
